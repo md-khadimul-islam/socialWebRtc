@@ -108,11 +108,19 @@ class Data {
   }
 
   void joinRoom(String roomId, RTCVideoRenderer remoteRenderer) async {
-    final roomRef = DBHelper.db.collection(DBHelper.collectionRoom).doc();
+    final roomRef = DBHelper.db.collection(DBHelper.collectionRoom).doc(roomId);
     final roomSnapshot = await roomRef.get();
+
+    log('this romm id:  ${roomRef.toString()}');
 
     if (roomSnapshot.exists) {
       peerConnection = await createPeerConnection(configuration);
+
+      registerPeerConnectionListeners();
+
+      localStream?.getTracks().forEach((track) {
+        peerConnection?.addTrack(track, localStream!);
+      });
     }
   }
 
