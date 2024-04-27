@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "101856237640",
+    "project_id": "socialwebrtc",
+    "storage_bucket": "socialwebrtc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:101856237640:android:d20de3bc9e9586756f207d",
+        "android_client_info": {
+          "package_name": "com.example.web_rtc_social"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDEOJN4JHKPaEjLI2uMhYPjyJIapdauVdA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
