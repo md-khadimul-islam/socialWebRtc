@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:web_rtc_social/home/calling_screen.dart';
 import 'package:web_rtc_social/home/room_list.dart';
 
 import 'data/data.dart';
@@ -49,10 +50,15 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             TextButton(
                 onPressed: () async {
-                  _data.openUserMedia(_localRenderer, _remoteRenderer);
-                  roomId = await _data.createRoom(_remoteRenderer);
-                  _createRoomController.text = roomId!;
-                  setState(() {});
+                  // _data.openUserMedia(_localRenderer, _remoteRenderer);
+                  // roomId = await _data.createRoom(_remoteRenderer);
+                  // _createRoomController.text = roomId!;
+                  // setState(() {});
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CallingScreen(),
+                      ));
                 },
                 child: const Text('Create Room')),
             TextFormField(

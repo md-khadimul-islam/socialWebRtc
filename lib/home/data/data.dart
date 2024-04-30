@@ -227,17 +227,61 @@ class Data {
   }
 
   // mendetory this part
+  // Future<void> openUserMedia(
+  //   RTCVideoRenderer localVideo,
+  //   RTCVideoRenderer remoteVideo,
+  // ) async {
+  //   var stream = await navigator.mediaDevices
+  //       .getUserMedia({'video': true, 'audio': false});
+
+  //   localVideo.srcObject = stream;
+  //   localStream = stream;
+
+  //   remoteVideo.srcObject = await createLocalMediaStream('key');
+  // }
+
   Future<void> openUserMedia(
     RTCVideoRenderer localVideo,
     RTCVideoRenderer remoteVideo,
+    bool isFrontCamera,
+    bool isMicOn,
+    bool isCameraOn,
   ) async {
-    var stream = await navigator.mediaDevices
-        .getUserMedia({'video': true, 'audio': false});
+    // Get user media stream
+    var stream = await navigator.mediaDevices.getUserMedia({
+      'video': {
+        'facingMode': isFrontCamera ? 'user' : 'environment',
+        'audio': isMicOn,
+      },
+      'audio': isMicOn,
+    });
 
+    // Assign the stream to the local video renderer
     localVideo.srcObject = stream;
     localStream = stream;
 
-    remoteVideo.srcObject = await createLocalMediaStream('key');
+    // Toggle local camera
+    if (!isCameraOn) {
+      localVideo.srcObject = null;
+    } else {
+      localVideo.srcObject = stream;
+    }
+
+    // Toggle local microphone
+    if (!isMicOn) {
+      // Mute microphone
+      stream.getAudioTracks().forEach((track) => track.enabled = false);
+    }
+
+    // Toggle remote video
+    if (!isCameraOn) {
+      remoteVideo.srcObject = null;
+    } else {
+      // Here, 'createLocalMediaStream' is replaced with the appropriate method
+      // to create a remote media stream. You might need to replace it with the
+      // correct method from your application.
+      remoteVideo.srcObject = await createLocalMediaStream('key');
+    }
   }
 
   void registerPeerConnectionListeners() {

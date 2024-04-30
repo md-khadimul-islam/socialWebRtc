@@ -47,7 +47,10 @@ class _JoinCallPageState extends State<JoinCallPage> {
             children: [
               TextButton(
                 onPressed: () {
-                  _data.openUserMedia(_localRenderer, _remoteRenderer);
+                  // _data.openUserMedia(
+                  //   _localRenderer,
+                  //   _remoteRenderer,
+                  // );
                   _data.joinRoom(widget.id, _remoteRenderer);
                   setState(() {});
                 },

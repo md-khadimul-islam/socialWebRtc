@@ -36,7 +36,7 @@ class _RoomListState extends State<RoomList> {
             return Text('Error: ${snapshot.error}');
           }
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Text('No documents found.');
+            return const Center(child: Text('No documents found.'));
           }
           // If data is available, display it
           return ListView(
