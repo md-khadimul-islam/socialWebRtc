@@ -51,7 +51,7 @@ class _JoinCallPageState extends State<JoinCallPage> {
                   //   _localRenderer,
                   //   _remoteRenderer,
                   // );
-                  _data.joinRoom(widget.id, _remoteRenderer);
+                  _data.joinRoom(widget.id);
                   setState(() {});
                 },
                 child: const Text('Join Call'),

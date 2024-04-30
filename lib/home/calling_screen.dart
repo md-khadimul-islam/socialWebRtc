@@ -1,12 +1,53 @@
-import 'package:flutter/material.dart';
+// ignore_for_file: unnecessary_null_comparison
 
-class CallingScreen extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:web_rtc_social/home/data/data.dart';
+
+class CallingScreen extends StatefulWidget {
   const CallingScreen({super.key});
+
+  @override
+  State<CallingScreen> createState() => _CallingScreenState();
+}
+
+class _CallingScreenState extends State<CallingScreen> {
+  final _localRenderer = RTCVideoRenderer();
+  final _remoteRenderer = RTCVideoRenderer();
+  final _data = Data();
+
+  @override
+  void dispose() {
+    _localRenderer.dispose();
+    _remoteRenderer.dispose();
+
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    _localRenderer.initialize();
+    _remoteRenderer.initialize();
+    rebuildLocalRenderer();
+    _data.onAddRemoteStream = (stream) {
+      _remoteRenderer.srcObject = stream;
+    };
+
+    super.initState();
+  }
+
+  void rebuildLocalRenderer() async {
+    await _data.openUserMedia(_localRenderer, _remoteRenderer);
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      setState(() {});
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
+        fit: StackFit.expand,
         children: [
           Image.asset(
             'assets/background.jpg',
@@ -49,12 +90,11 @@ class CallingScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.white)),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.asset(
-                  'assets/background.jpg',
-                  fit: BoxFit.cover,
-                ),
-              ),
+                  borderRadius: BorderRadius.circular(10),
+                  child: RTCVideoView(
+                    _localRenderer,
+                    objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+                  )),
             ),
           ),
         ],
