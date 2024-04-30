@@ -25,6 +25,7 @@ class Data {
   String? currentRoomText;
   String? roomId;
 
+  // Create Room Part
   Future<String> createRoom(RTCVideoRenderer remoteRenderer) async {
     final roomRef = DBHelper.db.collection(DBHelper.collectionRoom).doc();
 
@@ -62,11 +63,11 @@ class Data {
     currentRoomText = 'Current room is $roomId - You are the caller!';
 
     // 6th create onTrack and set remote stream
-    // peerConnection?.onTrack = (event) {
-    //   event.streams[0].getTracks().forEach((track) {
-    //     remoteStream?.addTrack(track);
-    //   });
-    // };
+    peerConnection?.onTrack = (event) {
+      event.streams[0].getTracks().forEach((track) {
+        remoteStream?.addTrack(track);
+      });
+    };
 
     // 7th Listening for remote session description below
 
@@ -89,7 +90,10 @@ class Data {
 
     // 8th Listen for remote Ice candidates below
 
-    roomRef.collection('calleeCandidates').snapshots().listen((snapshot) {
+    roomRef
+        .collection(DBHelper.calleeCollection)
+        .snapshots()
+        .listen((snapshot) {
       for (var change in snapshot.docChanges) {
         if (change.type == DocumentChangeType.added) {
           Map<String, dynamic> data = change.doc.data() as Map<String, dynamic>;
@@ -104,24 +108,122 @@ class Data {
         }
       }
     });
+    this.roomId = roomId;
     return roomId;
   }
 
-  void joinRoom(String roomId, RTCVideoRenderer remoteRenderer) async {
+  // Join Room Part
+
+  Future<void> joinRoom(String roomId, RTCVideoRenderer remoteRenderer) async {
     final roomRef = DBHelper.db.collection(DBHelper.collectionRoom).doc(roomId);
     final roomSnapshot = await roomRef.get();
 
     log('this romm id:  ${roomRef.toString()}');
+    this.roomId = roomId;
 
     if (roomSnapshot.exists) {
+      // Create Peer Connection
       peerConnection = await createPeerConnection(configuration);
 
+      // RegisterPeerConnection
       registerPeerConnectionListeners();
 
+      // Track Add in Local Stream
       localStream?.getTracks().forEach((track) {
         peerConnection?.addTrack(track, localStream!);
       });
+
+      // Code for collecting ICE candidates below
+      var calleeCandidatesCollection = roomRef.collection('calleeCandidates');
+      peerConnection!.onIceCandidate = (RTCIceCandidate? candidate) {
+        // Signaling Server Part
+        if (candidate == null) {
+          log('onIceCandidate: complete!');
+          return;
+        }
+        log('onIceCandidate: ${candidate.toMap()}');
+        calleeCandidatesCollection.add(candidate.toMap());
+      };
+
+      // Add track in Remote Stream
+      peerConnection?.onTrack = (RTCTrackEvent event) {
+        log('Got remote track: ${event.streams[0]}');
+        event.streams[0].getTracks().forEach((track) {
+          log('Add a track to the remoteStream: $track');
+          remoteStream?.addTrack(track);
+        });
+      };
+
+      // Creating SDP and set Signaling Server
+      var data = roomSnapshot.data() as Map<String, dynamic>;
+      log('Got offer $data');
+      var offer = data['offer'];
+      await peerConnection?.setRemoteDescription(
+          RTCSessionDescription(offer['sdp'], offer['type']));
+      var answer = await peerConnection!.createAnswer();
+      log('Created Answer $answer');
+      await peerConnection!.setLocalDescription(answer);
+
+      Map<String, dynamic> roomWithAnswer = {
+        'answer': {'type': answer.type, 'sdp': answer.sdp}
+      };
+
+      await roomRef.update(roomWithAnswer);
+      // Finished creating SDP answer
+
+      // Listening for remote ICE candidates below
+      roomRef
+          .collection(DBHelper.callerCollection)
+          .snapshots()
+          .listen((snapshot) {
+        for (var document in snapshot.docChanges) {
+          var data = document.doc.data() as Map<String, dynamic>;
+          log(data.toString());
+          log('Got new remote ICE candidate: $data');
+          peerConnection!.addCandidate(
+            RTCIceCandidate(
+              data['candidate'],
+              data['sdpMid'],
+              data['sdpMLineIndex'],
+            ),
+          );
+        }
+      });
     }
+  }
+
+  // Hang UP
+  Future<void> hangUp(RTCVideoRenderer localVideo) async {
+    List<MediaStreamTrack> tracks = localVideo.srcObject!.getTracks();
+    for (var track in tracks) {
+      track.stop();
+    }
+
+    if (remoteStream != null) {
+      remoteStream!.getTracks().forEach((track) => track.stop());
+    }
+    if (peerConnection != null) peerConnection!.close();
+
+    if (roomId != null) {
+      var roomRef = DBHelper.db.collection(DBHelper.collectionRoom).doc(roomId);
+      log('This is roomRef: $roomRef');
+      var calleeCandidates =
+          await roomRef.collection(DBHelper.calleeCollection).get();
+      for (var document in calleeCandidates.docs) {
+        document.reference.delete();
+      }
+
+      var callerCandidates =
+          await roomRef.collection(DBHelper.callerCollection).get();
+      for (var document in callerCandidates.docs) {
+        document.reference.delete();
+      }
+
+      await roomRef.delete();
+    }
+
+    localStream!.dispose();
+    remoteStream?.dispose();
   }
 
   // mendetory this part

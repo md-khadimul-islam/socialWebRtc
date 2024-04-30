@@ -5,4 +5,5 @@ class DBHelper {
 
   static const collectionRoom = 'rooms';
   static const callerCollection = 'callerCollection';
+  static const calleeCollection = 'calleeCandidates';
 }

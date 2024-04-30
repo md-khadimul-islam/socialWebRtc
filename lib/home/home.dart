@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:web_rtc_social/home/room_list.dart';
 
 import 'data/data.dart';
 
@@ -14,15 +15,15 @@ class _HomeScreenState extends State<HomeScreen> {
   final _localRenderer = RTCVideoRenderer();
   final _remoteRenderer = RTCVideoRenderer();
   final _createRoomController = TextEditingController();
+  final _data = Data();
   String? roomId;
 
   @override
   void initState() {
     _localRenderer.initialize();
     _remoteRenderer.initialize();
-    Data().onAddRemoteStream = (stream) {
+    _data.onAddRemoteStream = (stream) {
       _remoteRenderer.srcObject = stream;
-      setState(() {});
     };
     super.initState();
   }
@@ -48,8 +49,8 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             TextButton(
                 onPressed: () async {
-                  Data().openUserMedia(_localRenderer, _remoteRenderer);
-                  roomId = await Data().createRoom(_remoteRenderer);
+                  _data.openUserMedia(_localRenderer, _remoteRenderer);
+                  roomId = await _data.createRoom(_remoteRenderer);
                   _createRoomController.text = roomId!;
                   setState(() {});
                 },
@@ -58,7 +59,33 @@ class _HomeScreenState extends State<HomeScreen> {
               controller: _createRoomController,
               decoration: const InputDecoration(border: OutlineInputBorder()),
             ),
-            Expanded(child: RTCVideoView(_localRenderer, mirror: true)),
+            const SizedBox(height: 50),
+            TextButton(
+                onPressed: () {
+                  // Data().openUserMedia(_localRenderer, _remoteRenderer);
+                  // Data().joinRoom(
+                  //     _createRoomController.text.trim(), _remoteRenderer);
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const RoomList(),
+                      ));
+                },
+                child: const Text('Room List')),
+            Expanded(
+              child: Row(
+                children: [
+                  Expanded(child: RTCVideoView(_localRenderer, mirror: true)),
+                  const SizedBox(width: 30),
+                  Expanded(child: RTCVideoView(_remoteRenderer)),
+                ],
+              ),
+            ),
+            TextButton(
+                onPressed: () {
+                  _data.hangUp(_localRenderer);
+                },
+                child: const Text('End Call'))
           ],
         ),
       ),
