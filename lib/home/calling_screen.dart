@@ -1,11 +1,16 @@
 // ignore_for_file: unnecessary_null_comparison
 
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:web_rtc_social/home/data/custom_state_management.dart';
 import 'package:web_rtc_social/home/data/data.dart';
 
 class CallingScreen extends StatefulWidget {
-  const CallingScreen({super.key});
+  const CallingScreen({super.key, required this.data});
+
+  final Data data;
 
   @override
   State<CallingScreen> createState() => _CallingScreenState();
@@ -14,13 +19,15 @@ class CallingScreen extends StatefulWidget {
 class _CallingScreenState extends State<CallingScreen> {
   final _localRenderer = RTCVideoRenderer();
   final _remoteRenderer = RTCVideoRenderer();
-  final _data = Data();
+
+  final _stateManage = CustomStateManage();
 
   @override
   void dispose() {
     _localRenderer.dispose();
     _remoteRenderer.dispose();
-
+    widget.data.dispose();
+    log('this dispose call');
     super.dispose();
   }
 
@@ -29,7 +36,7 @@ class _CallingScreenState extends State<CallingScreen> {
     _localRenderer.initialize();
     _remoteRenderer.initialize();
     rebuildLocalRenderer();
-    _data.onAddRemoteStream = (stream) {
+    widget.data.onAddRemoteStream = (stream) {
       _remoteRenderer.srcObject = stream;
     };
 
@@ -37,7 +44,7 @@ class _CallingScreenState extends State<CallingScreen> {
   }
 
   void rebuildLocalRenderer() async {
-    await _data.openUserMedia(_localRenderer, _remoteRenderer);
+    await widget.data.openUserMedia(_localRenderer, _remoteRenderer);
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       setState(() {});
     });
@@ -49,34 +56,59 @@ class _CallingScreenState extends State<CallingScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset(
-            'assets/background.jpg',
-            fit: BoxFit.cover,
-            height: double.infinity,
+          RTCVideoView(
+            _remoteRenderer,
+            objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
           ),
-          const Positioned(
+          Positioned(
             left: 0,
             right: 0,
             bottom: 40,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                CustomIconButton(
+                const CustomIconButton(
                   icon: Icons.volume_up,
                 ),
                 CustomIconButton(
                   icon: Icons.flip_camera_ios_rounded,
+                  onTap: () {
+                    widget.data.switchCamera();
+                  },
                 ),
                 CustomIconButton(
                   icon: Icons.call_end,
                   color: Colors.red,
+                  onTap: () {
+                    widget.data.hangUp(_localRenderer);
+
+                    Navigator.pop(context);
+                  },
                 ),
-                CustomIconButton(
-                  icon: Icons.keyboard_voice_rounded,
-                ),
-                CustomIconButton(
-                  icon: Icons.videocam,
-                )
+                _stateManage.build(builder: (context, value) {
+                  widget.data
+                      .toggleMicrophone(isMicOpen: value.isMicrophoneOpen);
+                  return CustomIconButton(
+                    icon: value.isMicrophoneOpen
+                        ? Icons.keyboard_voice_rounded
+                        : Icons.mic_off,
+                    onTap: () {
+                      _stateManage.updateValue(
+                          isMicroPhone: !value.isMicrophoneOpen);
+                    },
+                  );
+                }),
+                _stateManage.build(builder: (context, value) {
+                  widget.data.toggleVideo(isVideoOpen: value.isVideoEnable);
+                  return CustomIconButton(
+                    icon: value.isVideoEnable
+                        ? Icons.videocam
+                        : Icons.videocam_off,
+                    onTap: () {
+                      _stateManage.updateValue(isVideo: !value.isVideoEnable);
+                    },
+                  );
+                })
               ],
             ),
           ),

@@ -1,7 +1,10 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:web_rtc_social/home/calling_screen.dart';
+import 'package:web_rtc_social/home/data/data.dart';
 import 'package:web_rtc_social/home/data/db_helper.dart';
-import 'package:web_rtc_social/home/join_call.dart';
 
 class RoomList extends StatefulWidget {
   const RoomList({super.key});
@@ -12,6 +15,7 @@ class RoomList extends StatefulWidget {
 
 class _RoomListState extends State<RoomList> {
   late Stream<QuerySnapshot> _documentStream;
+  final _data = Data();
 
   @override
   void initState() {
@@ -45,10 +49,14 @@ class _RoomListState extends State<RoomList> {
               // For example, document.data()['field_name']
               return InkWell(
                 onTap: () {
+                  _data.joinRoom(document.id);
+                  log('this is room id: ${document.id}');
                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => JoinCallPage(id: document.id),
+                        builder: (context) => CallingScreen(
+                          data: _data,
+                        ),
                       ));
                 },
                 child: ListTile(

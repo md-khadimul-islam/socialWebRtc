@@ -25,8 +25,14 @@ class Data {
   String? currentRoomText;
   String? roomId;
 
+  void dispose() {
+    peerConnection?.dispose();
+    localStream?.dispose();
+    remoteStream?.dispose();
+  }
+
   // Create Room Part
-  Future<String> createRoom(RTCVideoRenderer remoteRenderer) async {
+  Future<String> createRoom() async {
     final roomRef = DBHelper.db.collection(DBHelper.collectionRoom).doc();
 
     // 1st create peer connection
@@ -238,51 +244,11 @@ class Data {
     localStream = stream;
 
     remoteVideo.srcObject = await createLocalMediaStream('key');
+
+    localStream?.getTracks().forEach((track) {
+      peerConnection?.addTrack(track, localStream!);
+    });
   }
-
-  // Future<void> openUserMedia(
-  //   RTCVideoRenderer localVideo,
-  //   RTCVideoRenderer remoteVideo,
-  //   bool isFrontCamera,
-  //   bool isMicOn,
-  //   bool isCameraOn,
-  // ) async {
-  //   // Get user media stream
-  //   var stream = await navigator.mediaDevices.getUserMedia({
-  //     'video': {
-  //       'facingMode': isFrontCamera ? 'user' : 'environment',
-  //       'audio': isMicOn,
-  //     },
-  //     'audio': isMicOn,
-  //   });
-
-  //   // Assign the stream to the local video renderer
-  //   localVideo.srcObject = stream;
-  //   localStream = stream;
-
-  //   // Toggle local camera
-  //   if (!isCameraOn) {
-  //     localVideo.srcObject = null;
-  //   } else {
-  //     localVideo.srcObject = stream;
-  //   }
-
-  //   // Toggle local microphone
-  //   if (!isMicOn) {
-  //     // Mute microphone
-  //     stream.getAudioTracks().forEach((track) => track.enabled = false);
-  //   }
-
-  //   // Toggle remote video
-  //   if (!isCameraOn) {
-  //     remoteVideo.srcObject = null;
-  //   } else {
-  //     // Here, 'createLocalMediaStream' is replaced with the appropriate method
-  //     // to create a remote media stream. You might need to replace it with the
-  //     // correct method from your application.
-  //     remoteVideo.srcObject = await createLocalMediaStream('key');
-  //   }
-  // }
 
   void registerPeerConnectionListeners() {
     peerConnection?.onIceGatheringState = (RTCIceGatheringState state) {
@@ -306,5 +272,23 @@ class Data {
       onAddRemoteStream?.call(stream);
       remoteStream = stream;
     };
+  }
+
+  void toggleMicrophone({bool isMicOpen = true}) {
+    localStream?.getAudioTracks().forEach((element) {
+      element.enabled = isMicOpen;
+    });
+  }
+
+  void toggleVideo({bool isVideoOpen = true}) {
+    localStream?.getVideoTracks().forEach((element) {
+      element.enabled = isVideoOpen;
+    });
+  }
+
+  void switchCamera() {
+    localStream?.getVideoTracks().forEach((element) {
+      Helper.switchCamera(element);
+    });
   }
 }
