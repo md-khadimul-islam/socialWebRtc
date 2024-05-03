@@ -25,11 +25,11 @@ class Data {
   String? currentRoomText;
   String? roomId;
 
-  void dispose() {
-    peerConnection?.dispose();
-    localStream?.dispose();
-    remoteStream?.dispose();
-  }
+  // void dispose() {
+  //   peerConnection?.dispose();
+  //   localStream?.dispose();
+  //   remoteStream?.dispose();
+  // }
 
   // Create Room Part
   Future<String> createRoom() async {
@@ -243,11 +243,21 @@ class Data {
     localVideo.srcObject = stream;
     localStream = stream;
 
+    // if (onAddRemoteStream != null) {
+    //   // Simulate receiving a remote stream after a delay (for testing)
+    //   Future.delayed(const Duration(seconds: 5), () {
+    //     onAddRemoteStream!(stream);
+    //     log('Remote stream received and added to remoteRenderer');
+    //   });
+    // } else {
+    //   log('onAddRemoteStream callback is null');
+    // }
+
     remoteVideo.srcObject = await createLocalMediaStream('key');
 
-    localStream?.getTracks().forEach((track) {
-      peerConnection?.addTrack(track, localStream!);
-    });
+    // localStream?.getTracks().forEach((track) {
+    //   peerConnection?.addTrack(track, localStream!);
+    // });
   }
 
   void registerPeerConnectionListeners() {
@@ -289,6 +299,12 @@ class Data {
   void switchCamera() {
     localStream?.getVideoTracks().forEach((element) {
       Helper.switchCamera(element);
+    });
+  }
+
+  void loudspeakerToggle({bool isSpeakerOn = true}) {
+    localStream?.getVideoTracks().forEach((element) {
+      Helper.setSpeakerphoneOn(isSpeakerOn);
     });
   }
 }

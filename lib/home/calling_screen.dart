@@ -17,8 +17,8 @@ class CallingScreen extends StatefulWidget {
 }
 
 class _CallingScreenState extends State<CallingScreen> {
-  final _localRenderer = RTCVideoRenderer();
-  final _remoteRenderer = RTCVideoRenderer();
+  final RTCVideoRenderer _localRenderer = RTCVideoRenderer();
+  final RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
 
   final _stateManage = CustomStateManage();
 
@@ -26,29 +26,45 @@ class _CallingScreenState extends State<CallingScreen> {
   void dispose() {
     _localRenderer.dispose();
     _remoteRenderer.dispose();
-    widget.data.dispose();
+    // widget.data.dispose();
     log('this dispose call');
     super.dispose();
   }
 
   @override
   void initState() {
-    _localRenderer.initialize();
-    _remoteRenderer.initialize();
-    rebuildLocalRenderer();
+    // _localRenderer.initialize();
+    // _remoteRenderer.initialize();
+    _initRenderers();
+    // rebuildLocalRenderer();
     widget.data.onAddRemoteStream = (stream) {
       _remoteRenderer.srcObject = stream;
+      setState(() {});
     };
 
     super.initState();
   }
 
-  void rebuildLocalRenderer() async {
-    await widget.data.openUserMedia(_localRenderer, _remoteRenderer);
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      setState(() {});
-    });
+  Future<void> _initRenderers() async {
+    await _localRenderer.initialize();
+    await _remoteRenderer.initialize();
+    _setupStream();
   }
+
+  void _setupStream() async {
+    await widget.data.openUserMedia(_localRenderer, _remoteRenderer);
+    // widget.data.onAddRemoteStream = (stream) {
+    //   _remoteRenderer.srcObject = stream;
+    //   setState(() {});
+    // };
+  }
+
+  // void rebuildLocalRenderer() async {
+  //   await widget.data.openUserMedia(_localRenderer, _remoteRenderer);
+  //   WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+  //     setState(() {});
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -67,9 +83,19 @@ class _CallingScreenState extends State<CallingScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                const CustomIconButton(
-                  icon: Icons.volume_up,
-                ),
+                _stateManage.build(builder: (context, value) {
+                  widget.data
+                      .loudspeakerToggle(isSpeakerOn: value.speakerToggle);
+                  return CustomIconButton(
+                    icon: value.speakerToggle
+                        ? Icons.volume_down
+                        : Icons.volume_up,
+                    onTap: () {
+                      _stateManage.updateValue(
+                          speakerToggle: !value.speakerToggle);
+                    },
+                  );
+                }),
                 CustomIconButton(
                   icon: Icons.flip_camera_ios_rounded,
                   onTap: () {
