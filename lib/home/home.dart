@@ -42,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   roomId = await _data.createRoom();
                   _createRoomController.text = roomId!;
                   setState(() {});
-                  Future.delayed(const Duration(seconds: 10), () {
+                  Future.delayed(const Duration(seconds: 4), () {
                     Navigator.push(
                         context,
                         MaterialPageRoute(

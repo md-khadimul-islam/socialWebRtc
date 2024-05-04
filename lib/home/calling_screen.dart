@@ -33,10 +33,10 @@ class _CallingScreenState extends State<CallingScreen> {
 
   @override
   void initState() {
-    // _localRenderer.initialize();
-    // _remoteRenderer.initialize();
+    _localRenderer.initialize();
+    _remoteRenderer.initialize();
     _initRenderers();
-    // rebuildLocalRenderer();
+    rebuildLocalRenderer();
     widget.data.onAddRemoteStream = (stream) {
       _remoteRenderer.srcObject = stream;
       setState(() {});
@@ -53,18 +53,18 @@ class _CallingScreenState extends State<CallingScreen> {
 
   void _setupStream() async {
     await widget.data.openUserMedia(_localRenderer, _remoteRenderer);
-    // widget.data.onAddRemoteStream = (stream) {
-    //   _remoteRenderer.srcObject = stream;
-    //   setState(() {});
-    // };
+    widget.data.onAddRemoteStream = (stream) {
+      _remoteRenderer.srcObject = stream;
+      setState(() {});
+    };
   }
 
-  // void rebuildLocalRenderer() async {
-  //   await widget.data.openUserMedia(_localRenderer, _remoteRenderer);
-  //   WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-  //     setState(() {});
-  //   });
-  // }
+  void rebuildLocalRenderer() async {
+    await widget.data.openUserMedia(_localRenderer, _remoteRenderer);
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      setState(() {});
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -255,9 +255,9 @@ class Data {
 
     remoteVideo.srcObject = await createLocalMediaStream('key');
 
-    // localStream?.getTracks().forEach((track) {
-    //   peerConnection?.addTrack(track, localStream!);
-    // });
+    localStream?.getTracks().forEach((track) {
+      peerConnection?.addTrack(track, localStream!);
+    });
   }
 
   void registerPeerConnectionListeners() {
