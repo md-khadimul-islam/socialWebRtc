@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:web_rtc_social/home/calling_screen.dart';
 import 'package:web_rtc_social/home/room_list.dart';
 
@@ -15,14 +16,21 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final _createRoomController = TextEditingController();
+  final _remoteRenderer = RTCVideoRenderer();
   final _data = Data();
   String? roomId;
 
   @override
   void dispose() {
     _createRoomController.dispose();
-
+    _remoteRenderer.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    _remoteRenderer.initialize();
+    super.initState();
   }
 
   @override
@@ -39,7 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
             TextButton(
                 onPressed: () async {
                   // _data.openUserMedia(_localRenderer, _remoteRenderer);
-                  roomId = await _data.createRoom();
+                  roomId = await _data.createRoom(_remoteRenderer);
                   _createRoomController.text = roomId!;
                   setState(() {});
                   Future.delayed(const Duration(seconds: 4), () {
@@ -48,6 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         MaterialPageRoute(
                           builder: (context) => CallingScreen(
                             data: _data,
+                            remote: _remoteRenderer,
                           ),
                         ));
                   });

@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:web_rtc_social/home/calling_screen.dart';
 import 'package:web_rtc_social/home/data/data.dart';
 import 'package:web_rtc_social/home/data/db_helper.dart';
@@ -16,11 +17,13 @@ class RoomList extends StatefulWidget {
 class _RoomListState extends State<RoomList> {
   late Stream<QuerySnapshot> _documentStream;
   final _data = Data();
+  final _remoteRenderer = RTCVideoRenderer();
 
   @override
   void initState() {
     _documentStream =
         DBHelper.db.collection(DBHelper.collectionRoom).snapshots();
+    _remoteRenderer.initialize();
     super.initState();
   }
 
@@ -49,13 +52,14 @@ class _RoomListState extends State<RoomList> {
               // For example, document.data()['field_name']
               return InkWell(
                 onTap: () {
-                  _data.joinRoom(document.id);
+                  _data.joinRoom(document.id, _remoteRenderer);
                   log('this is room id: ${document.id}');
                   Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => CallingScreen(
                           data: _data,
+                          remote: _remoteRenderer,
                         ),
                       ));
                 },

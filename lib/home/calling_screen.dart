@@ -8,9 +8,10 @@ import 'package:web_rtc_social/home/data/custom_state_management.dart';
 import 'package:web_rtc_social/home/data/data.dart';
 
 class CallingScreen extends StatefulWidget {
-  const CallingScreen({super.key, required this.data});
+  const CallingScreen({super.key, required this.data, required this.remote});
 
   final Data data;
+  final RTCVideoRenderer remote;
 
   @override
   State<CallingScreen> createState() => _CallingScreenState();
@@ -18,14 +19,15 @@ class CallingScreen extends StatefulWidget {
 
 class _CallingScreenState extends State<CallingScreen> {
   final RTCVideoRenderer _localRenderer = RTCVideoRenderer();
-  final RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
+  // final RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
 
   final _stateManage = CustomStateManage();
 
   @override
   void dispose() {
     _localRenderer.dispose();
-    _remoteRenderer.dispose();
+    // _remoteRenderer.dispose();
+    widget.remote.dispose;
     // widget.data.dispose();
     log('this dispose call');
     super.dispose();
@@ -34,33 +36,36 @@ class _CallingScreenState extends State<CallingScreen> {
   @override
   void initState() {
     _localRenderer.initialize();
-    _remoteRenderer.initialize();
-    _initRenderers();
+    // _remoteRenderer.initialize();
+    widget.remote.initialize();
+    // _initRenderers();
     rebuildLocalRenderer();
     widget.data.onAddRemoteStream = (stream) {
-      _remoteRenderer.srcObject = stream;
+      // _remoteRenderer.srcObject = stream;
+      widget.remote.srcObject = stream;
       setState(() {});
     };
 
     super.initState();
   }
 
-  Future<void> _initRenderers() async {
-    await _localRenderer.initialize();
-    await _remoteRenderer.initialize();
-    _setupStream();
-  }
+  // Future<void> _initRenderers() async {
+  //   await _localRenderer.initialize();
+  //   // await _remoteRenderer.initialize();
+  //   await widget.remote.initialize();
+  //   _setupStream();
+  // }
 
-  void _setupStream() async {
-    await widget.data.openUserMedia(_localRenderer, _remoteRenderer);
-    widget.data.onAddRemoteStream = (stream) {
-      _remoteRenderer.srcObject = stream;
-      setState(() {});
-    };
-  }
+  // void _setupStream() async {
+  //   await widget.data.openUserMedia(_localRenderer, widget.remote);
+  //   widget.data.onAddRemoteStream = (stream) {
+  //     widget.remote.srcObject = stream;
+  //     setState(() {});
+  //   };
+  // }
 
   void rebuildLocalRenderer() async {
-    await widget.data.openUserMedia(_localRenderer, _remoteRenderer);
+    await widget.data.openUserMedia(_localRenderer, widget.remote);
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       setState(() {});
     });
@@ -73,7 +78,7 @@ class _CallingScreenState extends State<CallingScreen> {
         fit: StackFit.expand,
         children: [
           RTCVideoView(
-            _remoteRenderer,
+            widget.remote,
             objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
           ),
           Positioned(

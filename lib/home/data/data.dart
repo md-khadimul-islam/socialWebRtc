@@ -32,7 +32,7 @@ class Data {
   // }
 
   // Create Room Part
-  Future<String> createRoom() async {
+  Future<String> createRoom(RTCVideoRenderer remoteRenderer) async {
     final roomRef = DBHelper.db.collection(DBHelper.collectionRoom).doc();
 
     // 1st create peer connection
@@ -120,7 +120,7 @@ class Data {
 
   // Join Room Part
 
-  Future<void> joinRoom(String roomId) async {
+  Future<void> joinRoom(String roomId, RTCVideoRenderer remoteRenderer) async {
     final roomRef = DBHelper.db.collection(DBHelper.collectionRoom).doc(roomId);
     final roomSnapshot = await roomRef.get();
 
