@@ -56,7 +56,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         MaterialPageRoute(
                           builder: (context) => CallingScreen(
                             data: _data,
-                            remote: _remoteRenderer,
                           ),
                         ));
                   });

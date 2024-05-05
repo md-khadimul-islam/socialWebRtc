@@ -59,7 +59,6 @@ class _RoomListState extends State<RoomList> {
                       MaterialPageRoute(
                         builder: (context) => CallingScreen(
                           data: _data,
-                          remote: _remoteRenderer,
                         ),
                       ));
                 },
